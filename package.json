@@ -1,32 +1,29 @@
 {
   "name": "african-erp",
-  "version": "1.0.0",
-  "description": "Modern ERP system for African SMEs with AI integration",
   "private": true,
+  "version": "2.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "check-setup": "node scripts/check-setup.js"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.3.2",
-    "@supabase/supabase-js": "^2.38.5",
-    "@tanstack/react-query": "^5.17.9",
+    "@hookform/resolvers": "^5.1.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "@tanstack/react-query": "^5.17.0",
     "clsx": "^2.0.0",
-    "date-fns": "^2.30.0",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.20.1",
-    "recharts": "^2.15.4",
-    "tailwind-merge": "^2.1.0",
-    "tailwindcss-animate": "^1.0.7",
+    "recharts": "^2.8.0",
+    "tailwind-merge": "^2.2.0",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },
@@ -41,7 +38,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "postcss": "^8.4.32",
-    "tailwindcss": "^3.3.6",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
   }
