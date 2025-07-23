@@ -1,10 +1,16 @@
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/auth/AuthProvider'
-import { useAuth } from '@/auth/hooks/useAuth'
-import AuthPage from '@/auth/pages/AuthPage'
+import { ProtectedRoute } from '@/auth/ProtectedRoute'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+
+// Auth pages
+import LoginPage from '@/auth/pages/LoginPage'
+import SignupPage from '@/auth/pages/SignupPage'
+
+// App pages
 import Dashboard from '@/modules/dashboard/pages/Dashboard'
 import CRMPage from '@/modules/crm/pages/CRMPage'
 import BillingPage from '@/modules/billing/pages/BillingPage'
@@ -13,8 +19,9 @@ import InventoryPage from '@/modules/inventory/pages/InventoryPage'
 import HRPage from '@/modules/hr/pages/HRPage'
 import ProjectsPage from '@/modules/projects/pages/ProjectsPage'
 import SalesPage from '@/modules/sales/pages/SalesPage'
+import NotificationsPage from '@/modules/notifications/pages/NotificationsPage'
+import ReportsPage from '@/modules/reports/pages/ReportsPage'
 import SettingsPage from '@/modules/settings/pages/SettingsPage'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,77 +32,46 @@ const queryClient = new QueryClient({
   },
 })
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return <LoadingSpinner />
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />
-  }
-
-  return <>{children}</>
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return <LoadingSpinner />
-  }
-
-  return (
-    <Routes>
-      <Route 
-        path="/auth" 
-        element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} 
-      />
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/crm/*" element={<CRMPage />} />
-                <Route path="/billing/*" element={<BillingPage />} />
-                <Route path="/accounting/*" element={<AccountingPage />} />
-                <Route path="/inventory/*" element={<InventoryPage />} />
-                <Route path="/hr/*" element={<HRPage />} />
-                <Route path="/projects/*" element={<ProjectsPage />} />
-                <Route path="/sales/*" element={<SalesPage />} />
-                <Route path="/settings/*" element={<SettingsPage />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  )
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-background">
-            <AppRoutes />
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'hsl(var(--card))',
-                  color: 'hsl(var(--card-foreground))',
-                  border: '1px solid hsl(var(--border))',
-                },
-              }}
-            />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/crm" element={<ProtectedRoute><DashboardLayout><CRMPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/billing" element={<ProtectedRoute><DashboardLayout><BillingPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/accounting" element={<ProtectedRoute><DashboardLayout><AccountingPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><DashboardLayout><InventoryPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/hr" element={<ProtectedRoute><DashboardLayout><HRPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/projects" element={<ProtectedRoute><DashboardLayout><ProjectsPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/sales" element={<ProtectedRoute><DashboardLayout><SalesPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><DashboardLayout><NotificationsPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><DashboardLayout><ReportsPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><DashboardLayout><SettingsPage /></DashboardLayout></ProtectedRoute>} />
+              
+              {/* Catch all */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
           </div>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            }}
+          />
         </Router>
       </AuthProvider>
     </QueryClientProvider>

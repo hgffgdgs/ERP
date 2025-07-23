@@ -1,238 +1,455 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { 
-  Bot, 
-  MessageCircle, 
-  X, 
-  Send, 
-  Lightbulb, 
-  TrendingUp, 
-  FileText,
-  Users
+import { Badge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/ui/Avatar'
+import {
+  MessageSquare,
+  X,
+  Send,
+  Mic,
+  MicOff,
+  Minimize2,
+  Maximize2,
+  Sparkles,
+  TrendingUp,
+  Users,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  Lightbulb,
+  Zap,
+  BarChart3,
+  Target,
+  Clock,
+  Bot
 } from 'lucide-react'
 
 interface Message {
   id: string
-  type: 'user' | 'assistant'
+  type: 'user' | 'ai'
   content: string
   timestamp: Date
+  suggestions?: string[]
+  actions?: Array<{
+    label: string
+    icon: React.ComponentType<{ className?: string }>
+    action: () => void
+  }>
 }
 
-const quickActions = [
-  { icon: TrendingUp, label: 'Sales Summary', action: 'show-sales-summary' },
-  { icon: FileText, label: 'Recent Invoices', action: 'show-recent-invoices' },
-  { icon: Users, label: 'Customer Insights', action: 'show-customer-insights' },
-  { icon: Lightbulb, label: 'Business Tips', action: 'show-business-tips' },
+interface QuickAction {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  description: string
+  category: string
+}
+
+const quickActions: QuickAction[] = [
+  {
+    id: '1',
+    label: 'Analyser Ventes',
+    icon: TrendingUp,
+    description: 'Analyse des performances de vente',
+    category: 'Analytics'
+  },
+  {
+    id: '2',
+    label: 'Rapport Clients',
+    icon: Users,
+    description: 'Génération rapport clientèle',
+    category: 'CRM'
+  },
+  {
+    id: '3',
+    label: 'Prédiction Budget',
+    icon: DollarSign,
+    description: 'Prévisions budgétaires IA',
+    category: 'Finance'
+  },
+  {
+    id: '4',
+    label: 'Optimiser Stock',
+    icon: Target,
+    description: 'Recommandations inventaire',
+    category: 'Inventory'
+  }
 ]
 
 export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [isListening, setIsListening] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      type: 'assistant',
-      content: 'Hello! I\'m your AI business assistant. I can help you with sales insights, generate reports, answer questions about your business, and provide recommendations. How can I assist you today?',
-      timestamp: new Date()
+      type: 'ai',
+      content: '👋 Bonjour ! Je suis votre assistant IA pour African ERP. Comment puis-je vous aider aujourd\'hui ?',
+      timestamp: new Date(),
+      suggestions: [
+        'Analyser les ventes du mois',
+        'Créer un rapport client',
+        'Optimiser mon stock',
+        'Prédire les revenus'
+      ]
     }
   ])
   const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content,
+      content: inputValue,
       timestamp: new Date()
     }
 
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setIsLoading(true)
+    setIsTyping(true)
 
-    // Simulate AI response
+    // Simuler une réponse IA
     setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: generateAIResponse(content),
-        timestamp: new Date()
-      }
+      const aiResponse = generateAIResponse(inputValue)
       setMessages(prev => [...prev, aiResponse])
-      setIsLoading(false)
-    }, 1000)
+      setIsTyping(false)
+    }, 1000 + Math.random() * 2000)
   }
 
-  const generateAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase()
+  const generateAIResponse = (userInput: string): Message => {
+    const responses = [
+      {
+        content: '📊 J\'ai analysé vos données de vente. Vos revenus ont augmenté de 23% ce mois-ci ! Voici mes recommandations :',
+        suggestions: ['Augmenter le stock des produits populaires', 'Lancer une campagne marketing', 'Analyser la satisfaction client'],
+        actions: [
+          { label: 'Voir rapport détaillé', icon: BarChart3, action: () => console.log('Rapport détaillé') },
+          { label: 'Créer campagne', icon: Target, action: () => console.log('Créer campagne') }
+        ]
+      },
+      {
+        content: '💡 Basé sur vos patterns de vente, je recommande de réapprovisionner 3 produits cette semaine. Voulez-vous que je génère les commandes ?',
+        suggestions: ['Générer les commandes', 'Voir les détails stock', 'Planifier livraisons'],
+        actions: [
+          { label: 'Générer commandes', icon: CheckCircle, action: () => console.log('Générer commandes') }
+        ]
+      },
+      {
+        content: '🎯 J\'ai identifié 5 clients inactifs avec un potentiel de €12,500. Une campagne de réactivation pourrait récupérer 60% de ce montant.',
+        suggestions: ['Créer campagne réactivation', 'Voir profils clients', 'Analyser causes inactivité'],
+        actions: [
+          { label: 'Créer campagne', icon: Users, action: () => console.log('Créer campagne') },
+          { label: 'Voir analyses', icon: TrendingUp, action: () => console.log('Voir analyses') }
+        ]
+      },
+      {
+        content: '⚠️ Alerte : 3 factures importantes arrivent à échéance dans 48h (total: €8,750). Je peux préparer les relances automatiquement.',
+        suggestions: ['Préparer relances', 'Voir détails factures', 'Planifier appels clients'],
+        actions: [
+          { label: 'Préparer relances', icon: AlertTriangle, action: () => console.log('Préparer relances') }
+        ]
+      }
+    ]
+
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)]
     
-    if (input.includes('sales') || input.includes('revenue')) {
-      return '📈 Based on your current data, your sales are trending upward this month with a 15% increase compared to last month. Your top-performing products are driving most of the growth. Would you like me to generate a detailed sales report?'
+    return {
+      id: Date.now().toString(),
+      type: 'ai',
+      content: randomResponse.content,
+      timestamp: new Date(),
+      suggestions: randomResponse.suggestions,
+      actions: randomResponse.actions
     }
-    
-    if (input.includes('invoice') || input.includes('billing')) {
-      return '💰 You have 3 pending invoices totaling $12,450. 2 invoices are due within the next 7 days. I can help you send payment reminders or generate new invoices. What would you like to do?'
-    }
-    
-    if (input.includes('customer') || input.includes('client')) {
-      return '👥 You have 47 active customers with an average order value of $850. Your customer retention rate is 85%. I notice 5 customers haven\'t placed orders in the last 60 days - would you like me to suggest a re-engagement campaign?'
-    }
-    
-    if (input.includes('inventory') || input.includes('stock')) {
-      return '📦 Your inventory status: 12 products are running low on stock, 3 products are out of stock. Based on sales trends, I recommend restocking your top 5 products within the next 2 weeks to avoid stockouts.'
-    }
-    
-    if (input.includes('report') || input.includes('analytics')) {
-      return '📊 I can generate various reports for you: Sales Performance, Customer Analysis, Inventory Status, Financial Summary, or Project Progress. Which report would you like me to create?'
-    }
-    
-    if (input.includes('help') || input.includes('how')) {
-      return '🤝 I can help you with: \n• Analyzing business performance\n• Generating reports and insights\n• Managing customers and leads\n• Tracking inventory and sales\n• Providing business recommendations\n\nWhat specific area would you like assistance with?'
-    }
-    
-    return '🤖 I understand you\'re asking about your business operations. While I\'m still learning about your specific needs, I can help you with sales analysis, customer management, inventory tracking, and generating business insights. Could you be more specific about what you\'d like to know?'
   }
 
-  const handleQuickAction = (action: string) => {
-    let message = ''
-    switch (action) {
-      case 'show-sales-summary':
-        message = 'Show me a sales summary for this month'
-        break
-      case 'show-recent-invoices':
-        message = 'What are my recent invoices?'
-        break
-      case 'show-customer-insights':
-        message = 'Give me customer insights'
-        break
-      case 'show-business-tips':
-        message = 'Give me some business tips'
-        break
+  const handleQuickAction = (action: QuickAction) => {
+    const message = `Exécuter: ${action.label} - ${action.description}`
+    setInputValue(message)
+    handleSendMessage()
+  }
+
+  const toggleListening = () => {
+    setIsListening(!isListening)
+    // Ici vous pourriez intégrer la reconnaissance vocale
+    if (!isListening) {
+      setTimeout(() => setIsListening(false), 3000) // Simuler l'arrêt après 3s
     }
-    handleSendMessage(message)
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
+
+  if (!isOpen) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-primary to-secondary hover:shadow-xl transition-all duration-300 group"
+        >
+          <div className="relative">
+            <Sparkles className="h-6 w-6 text-white" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          </div>
+        </Button>
+        
+        {/* Notification badge */}
+        <div className="absolute -top-2 -left-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold animate-bounce">
+          3
+        </div>
+      </div>
+    )
   }
 
   return (
-    <>
-      {/* AI Assistant Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {!isOpen && (
-          <Button
-            onClick={() => setIsOpen(true)}
-            className="h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform"
-            size="lg"
-          >
-            <Bot className="h-6 w-6" />
-          </Button>
-        )}
-      </div>
-
-      {/* AI Assistant Panel */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-96 h-[500px] flex flex-col">
-          <Card className="flex-1 flex flex-col shadow-2xl">
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
-              <div className="flex items-center space-x-2">
-                <div className="bg-primary rounded-full p-2">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <CardTitle className="text-lg">AI Assistant</CardTitle>
+    <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${
+      isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
+    }`}>
+      <div className="bg-card/95 backdrop-blur-sm border border-border rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Avatar size="sm" className="bg-gradient-to-r from-primary to-secondary">
+                  <Bot className="h-4 w-4 text-white" />
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-background" />
               </div>
+              <div>
+                <h3 className="font-semibold text-foreground flex items-center">
+                  Assistant IA
+                  <Sparkles className="h-4 w-4 ml-1 text-primary" />
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {isTyping ? 'En train d\'écrire...' : 'En ligne'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="h-8 w-8 p-0"
+              >
+                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
+                className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </Button>
-            </CardHeader>
+            </div>
+          </div>
+        </div>
 
-            <CardContent className="flex-1 flex flex-col space-y-4 p-4">
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+        {!isMinimized && (
+          <>
+            {/* Messages */}
+            <div className="flex-1 p-4 space-y-4 h-96 overflow-y-auto bg-gradient-to-b from-background/50 to-muted/20">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                    {message.type === 'ai' && (
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Avatar size="xs" className="bg-gradient-to-r from-primary to-secondary">
+                          <Bot className="h-3 w-3 text-white" />
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground">
+                          Assistant IA • {formatTime(message.timestamp)}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div
-                      className={`max-w-[85%] p-3 rounded-lg text-sm ${
+                      className={`p-3 rounded-2xl ${
                         message.type === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground ml-4'
+                          : 'bg-card border border-border shadow-sm'
                       }`}
                     >
-                      {message.content}
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      
+                      {message.type === 'user' && (
+                        <div className="text-xs opacity-70 mt-1 text-right">
+                          {formatTime(message.timestamp)}
+                        </div>
+                      )}
                     </div>
+
+                    {/* Suggestions */}
+                    {message.suggestions && (
+                      <div className="mt-3 space-y-2">
+                        <div className="text-xs text-muted-foreground font-medium">
+                          Suggestions:
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {message.suggestions.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7 rounded-full"
+                              onClick={() => {
+                                setInputValue(suggestion)
+                                inputRef.current?.focus()
+                              }}
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    {message.actions && (
+                      <div className="mt-3 space-y-2">
+                        {message.actions.map((action, index) => (
+                          <Button
+                            key={index}
+                            variant="secondary"
+                            size="sm"
+                            className="w-full justify-start h-8"
+                            onClick={action.action}
+                          >
+                            <action.icon className="h-3 w-3 mr-2" />
+                            {action.label}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
-                
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted text-muted-foreground p-3 rounded-lg text-sm">
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Avatar size="xs" className="bg-gradient-to-r from-primary to-secondary">
+                      <Bot className="h-3 w-3 text-white" />
+                    </Avatar>
+                    <div className="bg-card border border-border rounded-2xl p-3">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Quick Actions */}
-              {messages.length === 1 && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Quick actions:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {quickActions.map((action) => {
-                      const Icon = action.icon
-                      return (
-                        <Button
-                          key={action.action}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuickAction(action.action)}
-                          className="justify-start text-xs h-8"
-                        >
-                          <Icon className="h-3 w-3 mr-1" />
-                          {action.label}
-                        </Button>
-                      )
-                    })}
-                  </div>
                 </div>
               )}
+              
+              <div ref={messagesEndRef} />
+            </div>
 
-              {/* Input */}
-              <div className="flex space-x-2">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask me anything about your business..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSendMessage(inputValue)
-                    }
-                  }}
-                  disabled={isLoading}
-                />
+            {/* Quick Actions */}
+            <div className="p-3 border-t border-border bg-muted/20">
+              <div className="text-xs font-medium text-muted-foreground mb-2">Actions rapides:</div>
+              <div className="grid grid-cols-2 gap-2">
+                {quickActions.map((action) => (
+                  <Button
+                    key={action.id}
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-2 flex flex-col items-start text-left"
+                    onClick={() => handleQuickAction(action)}
+                  >
+                    <div className="flex items-center w-full mb-1">
+                      <action.icon className="h-3 w-3 mr-2 text-primary" />
+                      <span className="text-xs font-medium truncate">{action.label}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground line-clamp-1">
+                      {action.description}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-border bg-card">
+              <div className="flex items-end space-x-2">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Posez votre question à l'IA..."
+                    className="w-full px-4 py-2 pr-12 bg-muted/50 border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleListening}
+                    className={`absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full ${
+                      isListening ? 'bg-red-100 text-red-600' : 'hover:bg-accent'
+                    }`}
+                  >
+                    {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                </div>
                 <Button
-                  onClick={() => handleSendMessage(inputValue)}
-                  disabled={!inputValue.trim() || isLoading}
-                  size="sm"
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isTyping}
+                  className="h-10 w-10 p-0 rounded-full bg-gradient-to-r from-primary to-secondary"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </>
+              
+              {isListening && (
+                <div className="mt-2 flex items-center justify-center">
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                    <span className="text-xs">Écoute en cours...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {isMinimized && (
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar size="sm" className="bg-gradient-to-r from-primary to-secondary">
+                <Bot className="h-4 w-4 text-white" />
+              </Avatar>
+              <div>
+                <span className="font-medium text-sm">Assistant IA</span>
+                <Badge variant="success" size="sm" className="ml-2">3 insights</Badge>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
